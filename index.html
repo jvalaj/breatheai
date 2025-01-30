@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Breath: Cough Analysis</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px; }
+        #result { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Record Your Cough</h1>
+    <button id="recordButton">Start Recording</button>
+    <div id="result"></div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+
+        // Request microphone access
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    audioChunks = [];
+
+                    // Send to Flask backend
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob, 'cough.wav');
+
+                    try {
+                        const response = await fetch('/analyze', {
+                            method: 'POST',
+                            body: formData,
+                        });
+                        const results = await response.json();
+                        
+                        // Display results
+                        document.getElementById('result').innerHTML = `
+                            <h2>Analysis Results</h2>
+                            <p>Risk Status: ${results.risk_status}</p>
+                            <p>Wetness Level: ${results.wetness_level}</p>
+                            <p>Dry Coughs: ${results.dry_cough_count}</p>
+                            <p>Wet Coughs: ${results.wet_cough_count}</p>
+                        `;
+                    } catch (error) {
+                        console.error('Error:', error);
+                    }
+                };
+            });
+
+        // Button click handler
+        document.getElementById('recordButton').addEventListener('click', () => {
+            if (mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                document.getElementById('recordButton').textContent = 'Start Recording';
+            } else {
+                mediaRecorder.start();
+                document.getElementById('recordButton').textContent = 'Stop Recording';
+            }
+        });
+    </script>
+</body>
+</html>

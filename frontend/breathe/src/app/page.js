@@ -47,7 +47,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-gray-100 p-8">
+    <div className="min-h-screen align-middle justify-center flex items-center bg-black text-gray-100 text-center p-8">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-4xl font-extralight mb-8 text-cyan-400">breathe.</h1>
 

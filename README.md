@@ -48,4 +48,4 @@ The model was trained on a dataset from Kaggle, consisting of 3029 rows of metad
 audio_file = '/path/to/your/audio/file.m4a'  # Path to your audio file
 predict_from_audio(audio_file)
 ```
-3. **Run the modeluse.py file with the updated location of the model and scaler files, and update the input audio. Terminal will show the result as cough_detected %
+3. **Run the modeluse.py** file with the updated location of the model and scaler files, and update the input audio. Terminal will show the result as cough_detected %

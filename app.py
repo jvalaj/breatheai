@@ -1,27 +1,17 @@
-from flask import Flask, render_template, request, jsonify
-import os
+import streamlit as st
+import joblib
+import numpy as np
+from process import process_audio
 
-app = Flask(__name__)
+# Load your trained model and scaler
+model = joblib.load('model.pkl')
+scaler = joblib.load('scaler.pkl')
 
-# Serve the HTML page
-@app.route('/')
-def index():
-    return render_template('index.html')
+st.title('Cough Detection App')
+audio_file = st.file_uploader('Upload an audio file', type=['wav', 'mp3'])
 
-# Analyze audio
-@app.route('/analyze', methods=['POST'])
-def analyze():
-    audio_file = request.files['audio']
-    audio_file.save("temp_audio.wav")
-    
-    # Mock analysis (replace with real code)
-    return jsonify({
-        "risk_status": "Low Risk",
-        "wetness_level": "Medium",
-        "dry_cough_count": 2,
-        "wet_cough_count": 1,
-        "lung_health_index": 85,
-    })
-
-if __name__ == "__main__":
-    app.run(debug=True)
+if audio_file is not None:
+    # Process the audio file and make predictions
+    features = process_audio(audio_file, scaler)
+    prediction = model.predict(features)
+    st.write(f'Prediction: {prediction[0]}')

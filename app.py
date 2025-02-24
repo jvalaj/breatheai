@@ -67,6 +67,14 @@ def visualize_audio(y, sr):
 
     return waveform_image_pil, spectrogram_image_pil
 
+def get_advice(probability):
+    if probability < 30:
+        return "Low probability of a cough detected. This could be normal breathing or other sounds."
+    elif 30 <= probability < 70:
+        return "Moderate probability of a cough detected. Further evaluation might be necessary."
+    else:
+        return "High probability of a cough detected. Consider consulting a healthcare professional."
+
 def main():
     st.set_page_config(page_title="breatheAI", layout="centered")
 
@@ -112,13 +120,23 @@ def main():
 
         features, y, sr = extract_features(temp_file_path)
 
-        #waveform_pil, spectrogram_pil = visualize_audio(y, sr)
+        waveform_pil, spectrogram_pil = visualize_audio(y, sr)
 
-        #if waveform_pil and spectrogram_pil:
-         #   st.image(waveform_pil, caption='Waveform')
-          #  st.image(spectrogram_pil, caption='Spectrogram')
+        if waveform_pil and spectrogram_pil:
+            st.image(waveform_pil, caption='Waveform')
+            st.image(spectrogram_pil, caption='Spectrogram')
 
-        if st.button("Detect"):
+        detect_button = st.button("Detect")
+        if detect_button:
+            st.markdown(
+                """
+                <style>
+                .stButton>button {
+                    color: #808080;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+
             processing_placeholder = st.empty()
             processing_placeholder.write("Processing...")
             for _ in range(3):
@@ -133,6 +151,8 @@ def main():
 
             if prediction is not None:
                 st.write(f"Probability: {prediction:.2f}%")
+                advice = get_advice(prediction)
+                st.write(f"**Advice:** {advice}")
 
             os.unlink(temp_file_path)
 

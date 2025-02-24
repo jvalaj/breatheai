@@ -7,5 +7,5 @@ scikit-learn
 ffmpeg-python
 ffmpeg
 Pillow
-st_audiorec
 plotly
+streamlit-webrtc

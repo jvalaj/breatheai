@@ -1,13 +1,23 @@
 import streamlit as st
-import os
-import librosa
 import numpy as np
+import librosa
 import pickle
 import tempfile
 import time
 import plotly.graph_objects as go
+import os
 from pydub import AudioSegment
-from st_audiorec import st_audiorec  # Import the audio recording component
+from streamlit_webrtc import webrtc_streamer, WebRtcMode, AudioProcessorBase
+import av
+
+# Custom Audio Processor
+class AudioProcessor(AudioProcessorBase):
+    def __init__(self):
+        self.frames = []
+
+    def recv_audio(self, frame: av.AudioFrame) -> av.AudioFrame:
+        self.frames.append(frame.to_ndarray())
+        return frame
 
 def extract_features(file_path):
     try:
@@ -18,7 +28,6 @@ def extract_features(file_path):
                 audio.export(file_path, format='wav')
 
         y, sr = librosa.load(file_path)
-
         mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
         chroma = librosa.feature.chroma_stft(y=y, sr=sr)
         spectral_contrast = librosa.feature.spectral_contrast(y=y, sr=sr)
@@ -54,19 +63,15 @@ def predict_from_audio(audio_file_path):
 
 def visualize_waveform(y, sr):
     time_axis = np.linspace(0, len(y) / sr, num=len(y))
-
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=time_axis, y=y, mode='lines', name='Waveform'))
-    
     fig.update_layout(title="Waveform", xaxis_title="Time (seconds)", yaxis_title="Amplitude", template="plotly_dark")
     return fig
 
 def visualize_spectrogram(y, sr):
     D = librosa.amplitude_to_db(np.abs(librosa.stft(y)), ref=np.max)
-
     fig = go.Figure()
     fig.add_trace(go.Heatmap(z=D, colorscale='Inferno'))
-
     fig.update_layout(title="Spectrogram", xaxis_title="Time", yaxis_title="Frequency", template="plotly_dark")
     return fig
 
@@ -80,30 +85,40 @@ def get_advice(probability):
 
 def main():
     st.set_page_config(page_title="breatheAI", layout="centered")
-
     st.title("breatheAI")
 
-    # Option to Upload or Record
+    # Upload or Record
     st.write("Choose an option:")
     col1, col2 = st.columns(2)
     with col1:
         uploaded_file = st.file_uploader("Upload Audio", type=["wav", "mp3", "flac", "ogg", "webm"])
+    
     with col2:
-        st.write("OR")
-        recorded_audio = st_audiorec()
+        st.write("OR Record Audio")
+        webrtc_ctx = webrtc_streamer(
+            key="record",
+            mode=WebRtcMode.SENDRECV,
+            audio_processor_factory=AudioProcessor,
+            media_stream_constraints={"video": False, "audio": True}
+        )
 
     temp_file_path = None
+
     if uploaded_file:
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_file.name)[1]) as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
             temp_file_path = tmp_file.name
         st.audio(uploaded_file, format='audio/*')
 
-    elif recorded_audio:
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
-            tmp_file.write(recorded_audio)
-            temp_file_path = tmp_file.name
-        st.audio(recorded_audio, format='audio/wav')
+    elif webrtc_ctx and webrtc_ctx.state.playing:
+        audio_processor = webrtc_ctx.audio_processor
+        if audio_processor is not None:
+            audio_frames = audio_processor.frames
+            if audio_frames:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
+                    tmp_file.write(np.concatenate(audio_frames).tobytes())
+                    temp_file_path = tmp_file.name
+                st.audio(temp_file_path, format="audio/wav")
 
     if temp_file_path:
         detect_button = st.button("Detect")
@@ -111,9 +126,7 @@ def main():
             st.markdown(
                 """
                 <style>
-                .stButton>button {
-                    color: #808080;
-                }
+                .stButton>button { color: #808080; }
                 </style>
                 """, unsafe_allow_html=True)
 

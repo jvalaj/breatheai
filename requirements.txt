@@ -6,5 +6,4 @@ pydub
 scikit-learn
 ffmpeg-python
 ffmpeg
-io
-PIL
+Pillow

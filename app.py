@@ -41,32 +41,63 @@ def predict_from_audio(audio_file_path):
             prediction = model.predict(features_scaled)
             return prediction[0] * 100
         except FileNotFoundError:
-            st.error("Model or scaler file not found. Please ensure 'gbm_model.pkl' and 'scaler.pkl' are in the same directory.")
+            st.error("Model or scaler file not found.")
             return None
         except Exception as e:
-            st.error(f"An error occurred during prediction: {e}")
+            st.error(f"An error occurred: {e}")
             return None
     else:
         return None
 
 def main():
-    st.title("Cough Detection App")
+    st.set_page_config(page_title="breatheAI", layout="centered")
 
-    uploaded_file = st.file_uploader("Upload an audio file", type=["wav", "mp3", "flac", "ogg", "webm"])
+    st.markdown(
+        """
+        <style>
+        body {
+            color: #f0f0f0;
+            background-color: #111111;
+        }
+        .stButton>button {
+            color: #f0f0f0;
+            background-color: #333333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+        .stFileUploader>div>div>div {
+            background-color: #333333;
+            color: #f0f0f0;
+            border: 1px solid #555555;
+            border-radius: 5px;
+        }
+        .stAudio>audio {
+            background-color: #333333;
+            border-radius: 5px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    if uploaded_file is not None:
+    st.title("breatheAI")
+
+    uploaded_file = st.file_uploader("Upload Audio", type=["wav", "mp3", "flac", "ogg", "webm"])
+
+    if uploaded_file:
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_file.name)[1]) as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
             temp_file_path = tmp_file.name
 
         st.audio(uploaded_file, format='audio/*')
 
-        if st.button("Detect Cough"):
+        if st.button("Detect"):
             prediction = predict_from_audio(temp_file_path)
 
             if prediction is not None:
-                st.write(f"Cough Detected Probability: {prediction:.2f}%")
-            os.unlink(temp_file_path) #clean up temp file.
+                st.write(f"Probability: {prediction:.2f}%")
+            os.unlink(temp_file_path)
 
 if __name__ == "__main__":
     main()

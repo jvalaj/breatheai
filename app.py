@@ -117,15 +117,6 @@ def main():
             temp_file_path = tmp_file.name
 
         st.audio(uploaded_file, format='audio/*')
-
-        features, y, sr = extract_features(temp_file_path)
-
-        waveform_pil, spectrogram_pil = visualize_audio(y, sr)
-
-        if waveform_pil and spectrogram_pil:
-            st.image(waveform_pil, caption='Waveform')
-            st.image(spectrogram_pil, caption='Spectrogram')
-
         detect_button = st.button("Detect")
         if detect_button:
             st.markdown(

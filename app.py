@@ -4,8 +4,8 @@ import numpy as np
 from process import process_audio
 
 # Load your trained model and scaler
-model = joblib.load('model.pkl')
-scaler = joblib.load('scaler.pkl')
+model = joblib.load('./model/model.pkl')
+scaler = joblib.load('./model/scaler.pkl')
 
 st.title('Cough Detection App')
 audio_file = st.file_uploader('Upload an audio file', type=['wav', 'mp3'])

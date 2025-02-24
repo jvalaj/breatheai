@@ -70,7 +70,7 @@ def visualize_audio(y, sr):
 def get_advice(probability):
     if probability < 30:
         return "Low probability of a cough detected. This could be normal breathing or other sounds."
-    elif 30 <= probability < 70:
+    elif 30 <= probability < 80:
         return "Moderate probability of a cough detected. Further evaluation might be necessary."
     else:
         return "High probability of a cough detected. Consider consulting a healthcare professional."
@@ -142,7 +142,7 @@ def main():
 
             if prediction is not None:
                 st.write(f"Probability: {prediction:.2f}%")
-                advice = get_advice(prediction*100)
+                advice = get_advice(prediction)
                 st.write(f"**Advice:** {advice}")
 
             os.unlink(temp_file_path)

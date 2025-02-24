@@ -3,11 +3,11 @@ import os
 import librosa
 import numpy as np
 import pickle
-from pydub import AudioSegment
 import tempfile
 import time
-from PIL import Image
-from io import BytesIO
+import plotly.graph_objects as go
+from pydub import AudioSegment
+from st_audiorec import st_audiorec  # Import the audio recording component
 
 def extract_features(file_path):
     try:
@@ -52,20 +52,23 @@ def predict_from_audio(audio_file_path):
     else:
         return None, None, None
 
-def visualize_audio(y, sr):
-    if y is None or sr is None:
-        return None, None
+def visualize_waveform(y, sr):
+    time_axis = np.linspace(0, len(y) / sr, num=len(y))
 
-    # Waveform Image
-    waveform_image = librosa.display.waveshow(y, sr=sr, res_type='kaiser_fast')
-    waveform_image_pil = Image.fromarray(np.uint8(waveform_image * 255))
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=time_axis, y=y, mode='lines', name='Waveform'))
+    
+    fig.update_layout(title="Waveform", xaxis_title="Time (seconds)", yaxis_title="Amplitude", template="plotly_dark")
+    return fig
 
-    # Spectrogram Image
+def visualize_spectrogram(y, sr):
     D = librosa.amplitude_to_db(np.abs(librosa.stft(y)), ref=np.max)
-    spectrogram_image = librosa.display.specshow(D, sr=sr, x_axis='time', y_axis='log')
-    spectrogram_image_pil = Image.fromarray(np.uint8(spectrogram_image * 255))
 
-    return waveform_image_pil, spectrogram_image_pil
+    fig = go.Figure()
+    fig.add_trace(go.Heatmap(z=D, colorscale='Inferno'))
+
+    fig.update_layout(title="Spectrogram", xaxis_title="Time", yaxis_title="Frequency", template="plotly_dark")
+    return fig
 
 def get_advice(probability):
     if probability < 30:
@@ -78,45 +81,31 @@ def get_advice(probability):
 def main():
     st.set_page_config(page_title="breatheAI", layout="centered")
 
-    st.markdown(
-        """
-        <style>
-        body {
-            color: #f0f0f0;
-            background-color: #111111;
-        }
-        .stButton>button {
-            color: #f0f0f0;
-            background-color: #333333;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-        }
-        .stFileUploader>div>div>div {
-            background-color: #333333;
-            color: #f0f0f0;
-            border: 1px solid #555555;
-            border-radius: 5px;
-        }
-        .stAudio>audio {
-            background-color: #333333;
-            border-radius: 5px;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
     st.title("breatheAI")
 
-    uploaded_file = st.file_uploader("Upload Audio", type=["wav", "mp3", "flac", "ogg", "webm"])
+    # Option to Upload or Record
+    st.write("Choose an option:")
+    col1, col2 = st.columns(2)
+    with col1:
+        uploaded_file = st.file_uploader("Upload Audio", type=["wav", "mp3", "flac", "ogg", "webm"])
+    with col2:
+        st.write("OR")
+        recorded_audio = st_audiorec()
 
+    temp_file_path = None
     if uploaded_file:
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_file.name)[1]) as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
             temp_file_path = tmp_file.name
-
         st.audio(uploaded_file, format='audio/*')
+
+    elif recorded_audio:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
+            tmp_file.write(recorded_audio)
+            temp_file_path = tmp_file.name
+        st.audio(recorded_audio, format='audio/wav')
+
+    if temp_file_path:
         detect_button = st.button("Detect")
         if detect_button:
             st.markdown(
@@ -130,28 +119,27 @@ def main():
 
             processing_placeholder = st.empty()
             processing_placeholder.write("Processing...")
-            for _ in range(3):
-                time.sleep(0.5)
-                processing_placeholder.write("Processing. .")
-                time.sleep(0.5)
-                processing_placeholder.write("Processing. . .")
-                time.sleep(0.5)
 
-            prediction, _, _ = predict_from_audio(temp_file_path)
+            time.sleep(2)  # Simulating processing time
+
+            prediction, y, sr = predict_from_audio(temp_file_path)
             processing_placeholder.empty()
 
             if prediction is not None:
-                st.write(f"Probability: {prediction:.2f}%")
+                st.write(f"**Probability of Cough:** {prediction:.2f}%")
                 advice = get_advice(prediction)
                 st.write(f"**Advice:** {advice}")
+
+                # Show Visualizations
+                st.subheader("Audio Visualizations")
+                st.plotly_chart(visualize_waveform(y, sr))
+                st.plotly_chart(visualize_spectrogram(y, sr))
 
             os.unlink(temp_file_path)
 
     st.write("---")
     st.subheader("About")
-    st.write("This project aims to detect cough sounds from an audio file using machine learning. The model is trained on a dataset containing metadata and 31 audio features extracted from 3029 rows of data sourced from Kaggle. The model employs a Gradient Boosting classifier to predict the likelihood of a cough being detected in the given audio input.")
-    st.write("The system processes audio files (in various formats such as `.m4a`, `.obb`, `.webm`, `.mp3`, `.flac`) and extracts relevant audio features for prediction. Extracts 31 features, including Mel-frequency cepstral coefficients (MFCCs), chroma, and spectral contrast, using the `librosa` library. Uses a Gradient Boosting classifier (`gbm_model.pkl`), trained on a Kaggle dataset with metadata and audio features. After feature extraction, the model predicts the likelihood of a cough being present in the given audio file. The system works on individual audio files and can be used for batch processing by calling the function multiple times.")
-    st.write("The model was trained on a dataset from Kaggle, consisting of 3029 rows of metadata and 31 audio features. These features were extracted from raw audio files representing a variety of sounds, including coughs. The features used are Mel-frequency cepstral coefficients (MFCCs), Chroma spectral features, and Spectral contrast.")
+    st.write("This project detects cough sounds from audio using machine learning. The model is trained on a dataset with 31 audio features from 3029 samples sourced from Kaggle. It uses a Gradient Boosting classifier to predict the likelihood of a cough in an audio clip.")
 
 if __name__ == "__main__":
     main()

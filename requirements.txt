@@ -7,4 +7,5 @@ scikit-learn
 ffmpeg-python
 ffmpeg
 Pillow
-matplotlib
+st_audiorec
+plotly

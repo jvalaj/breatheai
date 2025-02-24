@@ -6,7 +6,8 @@ import pickle
 from pydub import AudioSegment
 import tempfile
 import time
-import matplotlib.pyplot as plt
+from io import BytesIO
+from PIL import Image
 
 def extract_features(file_path):
     try:
@@ -23,7 +24,7 @@ def extract_features(file_path):
         spectral_contrast = librosa.feature.spectral_contrast(y=y, sr=sr)
 
         features = np.hstack((np.mean(mfccs, axis=1), np.mean(chroma, axis=1), np.mean(spectral_contrast, axis=1)))
-        return features, y, sr #return the audio data and sample rate.
+        return features, y, sr
     except Exception as e:
         st.error(f"Error processing {file_path}: {e}")
         return None, None, None
@@ -41,7 +42,7 @@ def predict_from_audio(audio_file_path):
 
             features_scaled = scaler.transform([features])
             prediction = model.predict(features_scaled)
-            return prediction[0] * 100, y, sr #return audio data and sample rate.
+            return prediction[0] * 100, y, sr
         except FileNotFoundError:
             st.error("Model or scaler file not found.")
             return None, None, None
@@ -110,18 +111,16 @@ def main():
             if prediction is not None:
                 st.write(f"Probability: {prediction:.2f}%")
 
-                # Plot the waveform
-                fig, ax = plt.subplots()
-                librosa.display.waveshow(y, sr=sr, ax=ax)
-                ax.set(title='Waveform')
-                st.pyplot(fig)
+                # Waveform Image
+                waveform_image = librosa.display.waveshow(y, sr=sr, res_type='kaiser_fast')
+                waveform_image_pil = Image.fromarray(np.uint8(waveform_image * 255))
+                st.image(waveform_image_pil, caption='Waveform')
 
-                # Plot the spectrogram
+                # Spectrogram Image
                 D = librosa.amplitude_to_db(np.abs(librosa.stft(y)), ref=np.max)
-                fig, ax = plt.subplots()
-                img = librosa.display.specshow(D, sr=sr, x_axis='time', y_axis='log', ax=ax)
-                ax.set(title='Spectrogram')
-                st.pyplot(fig)
+                spectrogram_image = librosa.display.specshow(D, sr=sr, x_axis='time', y_axis='log')
+                spectrogram_image_pil = Image.fromarray(np.uint8(spectrogram_image * 255))
+                st.image(spectrogram_image_pil, caption='Spectrogram')
 
             os.unlink(temp_file_path)
 

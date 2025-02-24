@@ -5,6 +5,7 @@ import numpy as np
 import pickle
 from pydub import AudioSegment
 import tempfile
+import time
 
 def extract_features(file_path):
     try:
@@ -93,11 +94,28 @@ def main():
         st.audio(uploaded_file, format='audio/*')
 
         if st.button("Detect"):
+            processing_placeholder = st.empty()
+            processing_placeholder.write("Processing...")
+            for _ in range(3):
+                time.sleep(0.5)
+                processing_placeholder.write("Processing. .")
+                time.sleep(0.5)
+                processing_placeholder.write("Processing. . .")
+                time.sleep(0.5)
+
             prediction = predict_from_audio(temp_file_path)
+            processing_placeholder.empty()
 
             if prediction is not None:
                 st.write(f"Probability: {prediction:.2f}%")
+
             os.unlink(temp_file_path)
+
+    st.write("---")
+    st.subheader("About breatheAI")
+    st.write("This model analyzes audio files to detect coughs. It extracts features such as MFCCs, Chroma, and Spectral Contrast. These features are then scaled and fed into a Gradient Boosting Machine (GBM) model to predict the probability of a cough.")
+    st.write("The model has been trained on a diverse dataset of cough and non-cough audio samples to ensure accuracy.")
+    st.write("MFCCs (Mel-frequency cepstral coefficients) represent the short-term power spectrum of a sound, Chroma features relate to pitch content, and Spectral Contrast captures the differences in spectral peaks and valleys.")
 
 if __name__ == "__main__":
     main()

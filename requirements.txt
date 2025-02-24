@@ -1,11 +1,7 @@
 streamlit
-joblib
-numpy
 librosa
+numpy
 pydub
-scikit-learn
-ffmpeg-python
-ffmpeg
-Pillow
 plotly
-streamlit-javascript 
+scikit-learn
+git+https://github.com/stefanrmmr/streamlit_audio_recorder.git

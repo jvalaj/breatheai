@@ -6,8 +6,8 @@ import pickle
 from pydub import AudioSegment
 import tempfile
 import time
-from io import BytesIO
 from PIL import Image
+from io import BytesIO
 
 def extract_features(file_path):
     try:
@@ -52,6 +52,21 @@ def predict_from_audio(audio_file_path):
     else:
         return None, None, None
 
+def visualize_audio(y, sr):
+    if y is None or sr is None:
+        return None, None
+
+    # Waveform Image
+    waveform_image = librosa.display.waveshow(y, sr=sr, res_type='kaiser_fast')
+    waveform_image_pil = Image.fromarray(np.uint8(waveform_image * 255))
+
+    # Spectrogram Image
+    D = librosa.amplitude_to_db(np.abs(librosa.stft(y)), ref=np.max)
+    spectrogram_image = librosa.display.specshow(D, sr=sr, x_axis='time', y_axis='log')
+    spectrogram_image_pil = Image.fromarray(np.uint8(spectrogram_image * 255))
+
+    return waveform_image_pil, spectrogram_image_pil
+
 def main():
     st.set_page_config(page_title="breatheAI", layout="centered")
 
@@ -95,6 +110,14 @@ def main():
 
         st.audio(uploaded_file, format='audio/*')
 
+        features, y, sr = extract_features(temp_file_path)
+
+        waveform_pil, spectrogram_pil = visualize_audio(y, sr)
+
+        if waveform_pil and spectrogram_pil:
+            st.image(waveform_pil, caption='Waveform')
+            st.image(spectrogram_pil, caption='Spectrogram')
+
         if st.button("Detect"):
             processing_placeholder = st.empty()
             processing_placeholder.write("Processing...")
@@ -105,22 +128,11 @@ def main():
                 processing_placeholder.write("Processing. . .")
                 time.sleep(0.5)
 
-            prediction, y, sr = predict_from_audio(temp_file_path)
+            prediction, _, _ = predict_from_audio(temp_file_path)
             processing_placeholder.empty()
 
             if prediction is not None:
                 st.write(f"Probability: {prediction:.2f}%")
-
-                # Waveform Image
-                waveform_image = librosa.display.waveshow(y, sr=sr, res_type='kaiser_fast')
-                waveform_image_pil = Image.fromarray(np.uint8(waveform_image * 255))
-                st.image(waveform_image_pil, caption='Waveform')
-
-                # Spectrogram Image
-                D = librosa.amplitude_to_db(np.abs(librosa.stft(y)), ref=np.max)
-                spectrogram_image = librosa.display.specshow(D, sr=sr, x_axis='time', y_axis='log')
-                spectrogram_image_pil = Image.fromarray(np.uint8(spectrogram_image * 255))
-                st.image(spectrogram_image_pil, caption='Spectrogram')
 
             os.unlink(temp_file_path)
 

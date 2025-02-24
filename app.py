@@ -151,7 +151,7 @@ def main():
 
             if prediction is not None:
                 st.write(f"Probability: {prediction:.2f}%")
-                advice = get_advice(prediction)
+                advice = get_advice(prediction*100)
                 st.write(f"**Advice:** {advice}")
 
             os.unlink(temp_file_path)

@@ -137,10 +137,10 @@ def main():
             os.unlink(temp_file_path)
 
     st.write("---")
-    st.subheader("About breatheAI")
-    st.write("This model analyzes audio files to detect coughs. It extracts features such as MFCCs, Chroma, and Spectral Contrast. These features are then scaled and fed into a Gradient Boosting Machine (GBM) model to predict the probability of a cough.")
-    st.write("The model has been trained on a diverse dataset of cough and non-cough audio samples to ensure accuracy.")
-    st.write("MFCCs (Mel-frequency cepstral coefficients) represent the short-term power spectrum of a sound, Chroma features relate to pitch content, and Spectral Contrast captures the differences in spectral peaks and valleys.")
+    st.subheader("About")
+    st.write("This project aims to detect cough sounds from an audio file using machine learning. The model is trained on a dataset containing metadata and 31 audio features extracted from 3029 rows of data sourced from Kaggle. The model employs a Gradient Boosting classifier to predict the likelihood of a cough being detected in the given audio input.")
+    st.write("The system processes audio files (in various formats such as `.m4a`, `.obb`, `.webm`, `.mp3`, `.flac`) and extracts relevant audio features for prediction. Extracts 31 features, including Mel-frequency cepstral coefficients (MFCCs), chroma, and spectral contrast, using the `librosa` library. Uses a Gradient Boosting classifier (`gbm_model.pkl`), trained on a Kaggle dataset with metadata and audio features. After feature extraction, the model predicts the likelihood of a cough being present in the given audio file. The system works on individual audio files and can be used for batch processing by calling the function multiple times.")
+    st.write("The model was trained on a dataset from Kaggle, consisting of 3029 rows of metadata and 31 audio features. These features were extracted from raw audio files representing a variety of sounds, including coughs. The features used are Mel-frequency cepstral coefficients (MFCCs), Chroma spectral features, and Spectral contrast.")
 
 if __name__ == "__main__":
     main()

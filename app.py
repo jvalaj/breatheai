@@ -6,6 +6,7 @@ import pickle
 from pydub import AudioSegment
 import tempfile
 import time
+import matplotlib.pyplot as plt
 
 def extract_features(file_path):
     try:
@@ -22,13 +23,13 @@ def extract_features(file_path):
         spectral_contrast = librosa.feature.spectral_contrast(y=y, sr=sr)
 
         features = np.hstack((np.mean(mfccs, axis=1), np.mean(chroma, axis=1), np.mean(spectral_contrast, axis=1)))
-        return features
+        return features, y, sr #return the audio data and sample rate.
     except Exception as e:
         st.error(f"Error processing {file_path}: {e}")
-        return None
+        return None, None, None
 
 def predict_from_audio(audio_file_path):
-    features = extract_features(audio_file_path)
+    features, y, sr = extract_features(audio_file_path)
 
     if features is not None:
         try:
@@ -40,15 +41,15 @@ def predict_from_audio(audio_file_path):
 
             features_scaled = scaler.transform([features])
             prediction = model.predict(features_scaled)
-            return prediction[0] * 100
+            return prediction[0] * 100, y, sr #return audio data and sample rate.
         except FileNotFoundError:
             st.error("Model or scaler file not found.")
-            return None
+            return None, None, None
         except Exception as e:
             st.error(f"An error occurred: {e}")
-            return None
+            return None, None, None
     else:
-        return None
+        return None, None, None
 
 def main():
     st.set_page_config(page_title="breatheAI", layout="centered")
@@ -103,11 +104,24 @@ def main():
                 processing_placeholder.write("Processing. . .")
                 time.sleep(0.5)
 
-            prediction = predict_from_audio(temp_file_path)
+            prediction, y, sr = predict_from_audio(temp_file_path)
             processing_placeholder.empty()
 
             if prediction is not None:
                 st.write(f"Probability: {prediction:.2f}%")
+
+                # Plot the waveform
+                fig, ax = plt.subplots()
+                librosa.display.waveshow(y, sr=sr, ax=ax)
+                ax.set(title='Waveform')
+                st.pyplot(fig)
+
+                # Plot the spectrogram
+                D = librosa.amplitude_to_db(np.abs(librosa.stft(y)), ref=np.max)
+                fig, ax = plt.subplots()
+                img = librosa.display.specshow(D, sr=sr, x_axis='time', y_axis='log', ax=ax)
+                ax.set(title='Spectrogram')
+                st.pyplot(fig)
 
             os.unlink(temp_file_path)
 

@@ -7,8 +7,7 @@ import time
 import plotly.graph_objects as go
 import os
 from pydub import AudioSegment
-from streamlit_audio_recorder import st_audio_recorder
-
+from st_audiorec import st_audiorec 
 def extract_features(file_path):
     try:
         if file_path.endswith(('.obb', '.webm', '.mp3', '.flac')):
@@ -85,7 +84,7 @@ def main():
     
     with col2:
         st.write("OR Record Audio")
-        recorded_audio = st_audio_recorder(key="recorder")
+        recorded_audio = st_audiorec(key="recorder")
 
     temp_file_path = None
 

@@ -7,17 +7,7 @@ import time
 import plotly.graph_objects as go
 import os
 from pydub import AudioSegment
-from streamlit_webrtc import webrtc_streamer, WebRtcMode, AudioProcessorBase
-import av
-
-# Custom Audio Processor
-class AudioProcessor(AudioProcessorBase):
-    def __init__(self):
-        self.frames = []
-
-    def recv_audio(self, frame: av.AudioFrame) -> av.AudioFrame:
-        self.frames.append(frame.to_ndarray())
-        return frame
+from streamlit_javascript import st_javascript
 
 def extract_features(file_path):
     try:
@@ -83,6 +73,39 @@ def get_advice(probability):
     else:
         return "High probability of a cough detected. Consider consulting a healthcare professional."
 
+def record_audio():
+    """
+    JavaScript-based audio recorder.
+    """
+    js_code = """
+    async function recordAudio() {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        let audioChunks = [];
+        
+        mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
+        
+        mediaRecorder.start();
+        
+        await new Promise(resolve => setTimeout(resolve, 5000));  // Record for 5 seconds
+        
+        mediaRecorder.stop();
+        
+        await new Promise(resolve => mediaRecorder.onstop = resolve);
+        
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const reader = new FileReader();
+        
+        return new Promise(resolve => {
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.readAsDataURL(audioBlob);
+        });
+    }
+    
+    recordAudio().then(audioData => audioData);
+    """
+    return st_javascript(js_code)
+
 def main():
     st.set_page_config(page_title="breatheAI", layout="centered")
     st.title("breatheAI")
@@ -95,12 +118,14 @@ def main():
     
     with col2:
         st.write("OR Record Audio")
-        webrtc_ctx = webrtc_streamer(
-            key="record",
-            mode=WebRtcMode.SENDRECV,
-            audio_processor_factory=AudioProcessor,
-            media_stream_constraints={"video": False, "audio": True}
-        )
+        if st.button("Start Recording 🎤"):
+            recorded_audio = record_audio()
+            if recorded_audio:
+                audio_data = bytes(recorded_audio, encoding='utf-8')
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
+                    tmp_file.write(audio_data)
+                    temp_file_path = tmp_file.name
+                st.audio(temp_file_path, format="audio/wav")
 
     temp_file_path = None
 
@@ -109,16 +134,6 @@ def main():
             tmp_file.write(uploaded_file.getvalue())
             temp_file_path = tmp_file.name
         st.audio(uploaded_file, format='audio/*')
-
-    elif webrtc_ctx and webrtc_ctx.state.playing:
-        audio_processor = webrtc_ctx.audio_processor
-        if audio_processor is not None:
-            audio_frames = audio_processor.frames
-            if audio_frames:
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
-                    tmp_file.write(np.concatenate(audio_frames).tobytes())
-                    temp_file_path = tmp_file.name
-                st.audio(temp_file_path, format="audio/wav")
 
     if temp_file_path:
         detect_button = st.button("Detect")

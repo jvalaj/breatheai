@@ -6,3 +6,4 @@ pydub
 scikit-learn
 ffmpeg-python
 ffmpeg
+matplotlib

@@ -112,11 +112,11 @@ def main():
 
         features, y, sr = extract_features(temp_file_path)
 
-        waveform_pil, spectrogram_pil = visualize_audio(y, sr)
+        #waveform_pil, spectrogram_pil = visualize_audio(y, sr)
 
-        if waveform_pil and spectrogram_pil:
-            st.image(waveform_pil, caption='Waveform')
-            st.image(spectrogram_pil, caption='Spectrogram')
+        #if waveform_pil and spectrogram_pil:
+         #   st.image(waveform_pil, caption='Waveform')
+          #  st.image(spectrogram_pil, caption='Spectrogram')
 
         if st.button("Detect"):
             processing_placeholder = st.empty()

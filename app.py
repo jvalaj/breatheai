@@ -79,12 +79,21 @@ def main():
     **Welcome to breatheAI**, an advanced AI-powered application designed to analyze respiratory sounds and detect cough patterns. 
     This tool leverages cutting-edge signal processing techniques and machine learning to provide real-time insights into audio recordings.
     
+    ### Learn More About the Creator:
+    - [GitHub](https://github.com/jvalaj)
+    - [LinkedIn](https://www.linkedin.com/in/jvalaj/)
+    
+    ### ⚠️ Disclaimer:
+    **Audio processing and visualization may take up to 60 seconds due to cloud hosting limitations on the free-tier plan. Please be patient.**
+    
     ### How It Works:
     - **Upload any audio file** in formats like WAV, MP3, FLAC, OGG, and more.
     - **Feature Extraction**: The system processes the audio to extract key features like MFCCs, chroma, and spectral contrast.
     - **Machine Learning Prediction**: A trained Gradient Boosting Model (GBM) analyzes the features and predicts the probability of a cough in the recording.
     - **Visual Representations**: The waveform and spectrogram visualizations help users understand the sound characteristics.
     
+    **Dataset Used:**
+    The model is trained on the [COVID-19 Cough Audio Classification Dataset](https://www.kaggle.com/datasets/andrewmvd/covid19-cough-audio-classification), which contains thousands of audio samples to help classify respiratory patterns.
     """)
     
     # Upload Audio

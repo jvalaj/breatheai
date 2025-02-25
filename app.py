@@ -7,6 +7,7 @@ import time
 import plotly.graph_objects as go
 import os
 import pandas as pd
+import matplotlib.pyplot as plt
 from pydub import AudioSegment
 
 def extract_features(file_path):
@@ -31,20 +32,34 @@ def display_feature_analysis(mfccs, chroma, spectral_contrast):
     """Formats and displays feature analysis in a readable way."""
     st.subheader("Feature Analysis")
     
-    # Convert numpy arrays to pandas DataFrames for better visualization
-    mfcc_df = pd.DataFrame(mfccs, columns=["MFCC Values"]).round(2)
-    chroma_df = pd.DataFrame(chroma, columns=["Chroma Values"]).round(2)
-    spectral_df = pd.DataFrame(spectral_contrast, columns=["Spectral Contrast Values"]).round(2)
+    # Normal reference ranges (placeholders, adjust if needed)
+    normal_mfcc = [-300, 60, 20, 10, 5, 5, 2, -5, -5, 0, -1, -3, 2]
+    normal_chroma = [0.6, 0.5, 0.4, 0.4, 0.5, 0.4, 0.4, 0.5, 0.4, 0.4, 0.6, 0.7]
+    normal_spectral = [15, 11, 15, 14, 16, 16, 46]
     
-    # Display as tables
-    st.write("- **MFCCs (Mel-Frequency Cepstral Coefficients):** Represent the timbral features of the audio.")
-    st.dataframe(mfcc_df.T)
+    # Convert numpy arrays to lists for plotting
+    user_mfcc = np.mean(mfccs, axis=1).tolist()
+    user_chroma = np.mean(chroma, axis=1).tolist()
+    user_spectral = np.mean(spectral_contrast, axis=1).tolist()
     
-    st.write("- **Chroma Features:** Represent the tonal content of the audio.")
-    st.dataframe(chroma_df.T)
+    # Function to create a comparison plot
+    def plot_feature_comparison(user_values, normal_values, feature_labels, title):
+        fig, ax = plt.subplots(figsize=(8, 5))
+        x = range(len(feature_labels))
+        ax.bar(x, normal_values, width=0.4, label="Normal Range", alpha=0.7)
+        ax.bar([i + 0.4 for i in x], user_values, width=0.4, label="User's Audio", alpha=0.7)
+        ax.set_xticks([i + 0.2 for i in x])
+        ax.set_xticklabels(feature_labels, rotation=45, ha="right")
+        ax.set_xlabel("Feature Type")
+        ax.set_ylabel("Value")
+        ax.set_title(title)
+        ax.legend()
+        st.pyplot(fig)
     
-    st.write("- **Spectral Contrast:** Measures the difference between peaks and valleys in the spectrum.")
-    st.dataframe(spectral_df.T)
+    # Display plots
+    plot_feature_comparison(user_mfcc, normal_mfcc, list(range(1, 14)), "MFCC Comparison")
+    plot_feature_comparison(user_chroma, normal_chroma, list(range(1, 13)), "Chroma Comparison")
+    plot_feature_comparison(user_spectral, normal_spectral, list(range(1, 8)), "Spectral Contrast Comparison")
 
 def predict_from_audio(audio_file_path):
     features, y, sr, mfccs, chroma, spectral_contrast = extract_features(audio_file_path)
@@ -104,27 +119,9 @@ def main():
 
             if prediction is not None:
                 st.write(f"**Probability of Cough Detected:** {prediction:.2f}%")
-                display_feature_analysis(np.mean(mfccs, axis=1), np.mean(chroma, axis=1), np.mean(spectral_contrast, axis=1))
+                display_feature_analysis(mfccs, chroma, spectral_contrast)
 
             os.unlink(temp_file_path)
     
-    st.markdown("""
-    ### How It Works:
-    - **Upload any audio file** in formats like WAV, MP3, FLAC, OGG, and more.
-    - **Feature Extraction**: The system processes the audio to extract key features like MFCCs, chroma, and spectral contrast.
-    - **Machine Learning Prediction**: A trained Gradient Boosting Model (GBM) analyzes the features and predicts the probability of a cough in the recording.
-    - **Visual Representations**: The waveform and spectrogram visualizations help users understand the sound characteristics.
-    
-    ### Inspiration for breatheAI
-    Growing up in New Delhi, I witnessed firsthand how intense air pollution could be, especially during the winter months. 
-    The thick smog, the difficulty in breathing, and the rising cases of respiratory illnesses always had me thinking—how can technology help?
-    As a college student, I realized the potential of AI and machine learning in identifying respiratory conditions early. 
-    That’s when I decided to build breatheAI, a tool that could detect coughs from audio recordings and provide real-time insights. 
-    Hopefully, this project can contribute to a future where technology aids in monitoring air-quality-related illnesses and helps people make informed health decisions.
-    
-    ### Learn More About the Creator:
- [GitHub](https://github.com/jvalaj) | [LinkedIn](https://www.linkedin.com/in/jvalaj/)
-    """)
-
 if __name__ == "__main__":
     main()

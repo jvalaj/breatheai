@@ -7,14 +7,13 @@ import time
 import plotly.graph_objects as go
 import os
 from pydub import AudioSegment
-from st_audiorec import st_audiorec 
+
 def extract_features(file_path):
     try:
-        if file_path.endswith(('.obb', '.webm', '.mp3', '.flac')):
-            audio = AudioSegment.from_file(file_path)
-            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp_file:
-                file_path = tmp_file.name
-                audio.export(file_path, format='wav')
+        audio = AudioSegment.from_file(file_path)
+        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp_file:
+            file_path = tmp_file.name
+            audio.export(file_path, format='wav')
 
         y, sr = librosa.load(file_path)
         mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
@@ -74,21 +73,24 @@ def get_advice(probability):
 
 def main():
     st.set_page_config(page_title="breatheAI", layout="centered")
-    st.title("breatheAI")
+    st.title("breatheAI: AI-Powered Cough Detection")
 
-    # Upload or Record
-    st.write("Choose an option:")
-    col1, col2 = st.columns(2)
-    with col1:
-        uploaded_file = st.file_uploader("Upload Audio", type=["wav", "mp3", "flac", "ogg", "webm"])
+    st.markdown("""
+    **Welcome to breatheAI**, an advanced AI-powered application designed to analyze respiratory sounds and detect cough patterns. 
+    This tool leverages cutting-edge signal processing techniques and machine learning to provide real-time insights into audio recordings.
     
-    with col2:
-        st.write("OR Record Audio")
-        recorded_audio = st_audiorec()
- 
-        if recorded_audio is not None:
-            st.audio(recorded_audio, format='audio/wav')
-
+    ### How It Works:
+    - **Upload any audio file** in formats like WAV, MP3, FLAC, OGG, and more.
+    - **Feature Extraction**: The system processes the audio to extract key features like MFCCs, chroma, and spectral contrast.
+    - **Machine Learning Prediction**: A trained Gradient Boosting Model (GBM) analyzes the features and predicts the probability of a cough in the recording.
+    - **Visual Representations**: The waveform and spectrogram visualizations help users understand the sound characteristics.
+    
+    """)
+    
+    # Upload Audio
+    st.subheader("Upload an Audio File for Analysis")
+    uploaded_file = st.file_uploader("Choose an audio file", type=None)  # Accepts any audio format
+    
     temp_file_path = None
 
     if uploaded_file:
@@ -96,15 +98,9 @@ def main():
             tmp_file.write(uploaded_file.getvalue())
             temp_file_path = tmp_file.name
         st.audio(uploaded_file, format='audio/*')
-
-    elif recorded_audio:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
-            tmp_file.write(recorded_audio)
-            temp_file_path = tmp_file.name
-        st.audio(temp_file_path, format="audio/wav")
-
+    
     if temp_file_path:
-        detect_button = st.button("Detect")
+        detect_button = st.button("Analyze Audio")
         if detect_button:
             st.markdown(
                 """
@@ -114,7 +110,7 @@ def main():
                 """, unsafe_allow_html=True)
 
             processing_placeholder = st.empty()
-            processing_placeholder.write("Processing...")
+            processing_placeholder.write("Analyzing audio file...")
 
             time.sleep(2)  # Simulating processing time
 
@@ -122,20 +118,28 @@ def main():
             processing_placeholder.empty()
 
             if prediction is not None:
-                st.write(f"**Probability of Cough:** {prediction:.2f}%")
+                st.write(f"**Probability of Cough Detected:** {prediction:.2f}%")
                 advice = get_advice(prediction)
-                st.write(f"**Advice:** {advice}")
+                st.write(f"**Medical Advice:** {advice}")
 
                 # Show Visualizations
-                st.subheader("Audio Visualizations")
+                st.subheader("Audio Analysis & Visualization")
                 st.plotly_chart(visualize_waveform(y, sr))
                 st.plotly_chart(visualize_spectrogram(y, sr))
 
             os.unlink(temp_file_path)
 
     st.write("---")
-    st.subheader("About")
-    st.write("This project detects cough sounds from audio using machine learning. The model is trained on a dataset with 31 audio features from 3029 samples sourced from Kaggle. It uses a Gradient Boosting classifier to predict the likelihood of a cough in an audio clip.")
+    st.subheader("About breatheAI")
+    st.write("""
+    breatheAI is a powerful AI-driven tool for detecting coughs in audio recordings. The model is trained on a dataset containing over 3,000 samples and utilizes advanced machine learning techniques to classify respiratory patterns accurately.
+    
+    **Technical Details:**
+    - **Dataset**: 31 audio features extracted from 3029 samples (sourced from Kaggle)
+    - **Model**: Gradient Boosting Classifier with optimized hyperparameters
+    - **Feature Engineering**: MFCCs, Chroma, Spectral Contrast, and more
+    - **Application**: Early detection of cough patterns for healthcare monitoring
+    """)
 
 if __name__ == "__main__":
     main()

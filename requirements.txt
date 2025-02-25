@@ -1,7 +1,9 @@
 streamlit
-librosa
 numpy
+librosa
 pydub
+scipy
 plotly
-scikit-learn
-git+https://github.com/stefanrmmr/streamlit_audio_recorder.git
+sklearn
+soundfile
+pickle-mixin

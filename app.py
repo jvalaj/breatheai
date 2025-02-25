@@ -76,15 +76,59 @@ def main():
     st.title("breatheAI: AI-Powered Cough Detection")
 
     st.markdown("""
-    **Welcome to breatheAI**, an advanced AI-powered application designed to analyze respiratory sounds and detect cough patterns. 
-    This tool leverages cutting-edge signal processing techniques and machine learning to provide real-time insights into audio recordings.
-    
-    ### Learn More About the Creator:
-    - [GitHub](https://github.com/jvalaj)
-    - [LinkedIn](https://www.linkedin.com/in/jvalaj/)
-    
     ### ⚠️ Disclaimer:
     **Audio processing and visualization may take up to 60 seconds due to cloud hosting limitations on the free-tier plan. Please be patient.**
+    
+    ### Upload Audio
+    Upload an audio file to analyze cough probability.
+    """)
+    
+    uploaded_file = st.file_uploader("Choose an audio file", type=None)  # Accepts any audio format
+    
+    temp_file_path = None
+
+    if uploaded_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_file.name)[1]) as tmp_file:
+            tmp_file.write(uploaded_file.getvalue())
+            temp_file_path = tmp_file.name
+        st.audio(uploaded_file, format='audio/*')
+    
+    if temp_file_path:
+        detect_button = st.button("Analyze Audio")
+        if detect_button:
+            st.markdown(
+                """
+                <style>
+                .stButton>button { color: #808080; }
+                </style>
+                """, unsafe_allow_html=True)
+
+            processing_placeholder = st.empty()
+            processing_placeholder.write("Analyzing audio file...")
+
+            time.sleep(2)  # Simulating processing time
+
+            prediction, y, sr = predict_from_audio(temp_file_path)
+            processing_placeholder.empty()
+
+            if prediction is not None:
+                st.write(f"**Probability of Cough Detected:** {prediction:.2f}%")
+                advice = get_advice(prediction)
+                st.write(f"**Medical Advice:** {advice}")
+
+                # Show Visualizations
+                st.subheader("Audio Analysis & Visualization")
+                st.plotly_chart(visualize_waveform(y, sr))
+                st.plotly_chart(visualize_spectrogram(y, sr))
+
+            os.unlink(temp_file_path)
+    
+    st.markdown("""
+    ### How It Works:
+    - **Upload any audio file** in formats like WAV, MP3, FLAC, OGG, and more.
+    - **Feature Extraction**: The system processes the audio to extract key features like MFCCs, chroma, and spectral contrast.
+    - **Machine Learning Prediction**: A trained Gradient Boosting Model (GBM) analyzes the features and predicts the probability of a cough in the recording.
+    - **Visual Representations**: The waveform and spectrogram visualizations help users understand the sound characteristics.
     
     ### Inspiration for breatheAI
     Growing up in New Delhi, I witnessed firsthand how intense air pollution could be, especially during the winter months. 
@@ -93,14 +137,9 @@ def main():
     That’s when I decided to build breatheAI, a tool that could detect coughs from audio recordings and provide real-time insights. 
     Hopefully, this project can contribute to a future where technology aids in monitoring air-quality-related illnesses and helps people make informed health decisions.
     
-    ### How It Works:
-    - **Upload any audio file** in formats like WAV, MP3, FLAC, OGG, and more.
-    - **Feature Extraction**: The system processes the audio to extract key features like MFCCs, chroma, and spectral contrast.
-    - **Machine Learning Prediction**: A trained Gradient Boosting Model (GBM) analyzes the features and predicts the probability of a cough in the recording.
-    - **Visual Representations**: The waveform and spectrogram visualizations help users understand the sound characteristics.
-    
-    **Dataset Used:**
-    The model is trained on the [COVID-19 Cough Audio Classification Dataset](https://www.kaggle.com/datasets/andrewmvd/covid19-cough-audio-classification), which contains thousands of audio samples to help classify respiratory patterns.
+    ### Learn More About the Creator:
+    - [GitHub](https://github.com/jvalaj)
+    - [LinkedIn](https://www.linkedin.com/in/jvalaj/)
     """)
 
 if __name__ == "__main__":

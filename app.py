@@ -6,6 +6,7 @@ import tempfile
 import time
 import plotly.graph_objects as go
 import os
+import pandas as pd
 from pydub import AudioSegment
 
 def extract_features(file_path):
@@ -25,6 +26,25 @@ def extract_features(file_path):
     except Exception as e:
         st.error(f"Error processing {file_path}: {e}")
         return None, None, None, None, None, None
+
+def display_feature_analysis(mfccs, chroma, spectral_contrast):
+    """Formats and displays feature analysis in a readable way."""
+    st.subheader("Feature Analysis")
+    
+    # Convert numpy arrays to pandas DataFrames for better visualization
+    mfcc_df = pd.DataFrame(mfccs, columns=["MFCC Values"]).round(2)
+    chroma_df = pd.DataFrame(chroma, columns=["Chroma Values"]).round(2)
+    spectral_df = pd.DataFrame(spectral_contrast, columns=["Spectral Contrast Values"]).round(2)
+    
+    # Display as tables
+    st.write("- **MFCCs (Mel-Frequency Cepstral Coefficients):** Represent the timbral features of the audio.")
+    st.dataframe(mfcc_df.T)
+    
+    st.write("- **Chroma Features:** Represent the tonal content of the audio.")
+    st.dataframe(chroma_df.T)
+    
+    st.write("- **Spectral Contrast:** Measures the difference between peaks and valleys in the spectrum.")
+    st.dataframe(spectral_df.T)
 
 def predict_from_audio(audio_file_path):
     features, y, sr, mfccs, chroma, spectral_contrast = extract_features(audio_file_path)
@@ -84,18 +104,7 @@ def main():
 
             if prediction is not None:
                 st.write(f"**Probability of Cough Detected:** {prediction:.2f}%")
-                st.write("### Feature Analysis")
-                st.write("- **MFCCs (Mel-Frequency Cepstral Coefficients):** These represent the timbral features of the audio.")
-                st.write(f"  - Mean Values: {np.mean(mfccs, axis=1)}")
-                st.write("- **Chroma Features:** Represent the tonal content of the audio.")
-                st.write(f"  - Mean Values: {np.mean(chroma, axis=1)}")
-                st.write("- **Spectral Contrast:** Measures the difference between peaks and valleys in the spectrum.")
-                st.write(f"  - Mean Values: {np.mean(spectral_contrast, axis=1)}")
-
-                st.write("### Baseline Measures for Reference:")
-                st.write("- Typical MFCC values range between -100 to 100 for human voice.")
-                st.write("- Chroma features vary between 0 and 1, with higher values indicating more tonal energy.")
-                st.write("- Spectral contrast differences indicate clarity in cough versus normal speech.")
+                display_feature_analysis(np.mean(mfccs, axis=1), np.mean(chroma, axis=1), np.mean(spectral_contrast, axis=1))
 
             os.unlink(temp_file_path)
     

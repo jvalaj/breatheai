@@ -36,7 +36,7 @@ def predict_gbm(audio_file_path):
         try:
             with open('gbm_model.pkl', 'rb') as f:
                 model = pickle.load(f)
-            with open('scaler.pkl', 'rb') as f:
+            with open('gscaler.pkl', 'rb') as f:
                 scaler = pickle.load(f)
             
             features_scaled = scaler.transform([features])
@@ -54,7 +54,7 @@ def predict_gbm(audio_file_path):
 def predict_multi_output(audio_features, user_data):
     try:
         model = joblib.load('multi_output_model.pkl')
-        scaler = joblib.load('scaler.pkl')
+        scaler = joblib.load('mscaler.pkl')
         
         user_data = np.concatenate([user_data, audio_features])
         user_data_scaled = scaler.transform([user_data])

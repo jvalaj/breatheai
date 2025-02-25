@@ -86,6 +86,13 @@ def main():
     ### ⚠️ Disclaimer:
     **Audio processing and visualization may take up to 60 seconds due to cloud hosting limitations on the free-tier plan. Please be patient.**
     
+    ### Inspiration for breatheAI
+    Growing up in New Delhi, I witnessed firsthand how intense air pollution could be, especially during the winter months. 
+    The thick smog, the difficulty in breathing, and the rising cases of respiratory illnesses always had me thinking—how can technology help?
+    As a college student, I realized the potential of AI and machine learning in identifying respiratory conditions early. 
+    That’s when I decided to build breatheAI, a tool that could detect coughs from audio recordings and provide real-time insights. 
+    Hopefully, this project can contribute to a future where technology aids in monitoring air-quality-related illnesses and helps people make informed health decisions.
+    
     ### How It Works:
     - **Upload any audio file** in formats like WAV, MP3, FLAC, OGG, and more.
     - **Feature Extraction**: The system processes the audio to extract key features like MFCCs, chroma, and spectral contrast.
@@ -94,60 +101,6 @@ def main():
     
     **Dataset Used:**
     The model is trained on the [COVID-19 Cough Audio Classification Dataset](https://www.kaggle.com/datasets/andrewmvd/covid19-cough-audio-classification), which contains thousands of audio samples to help classify respiratory patterns.
-    """)
-    
-    # Upload Audio
-    st.subheader("Upload an Audio File for Analysis")
-    uploaded_file = st.file_uploader("Choose an audio file", type=None)  # Accepts any audio format
-    
-    temp_file_path = None
-
-    if uploaded_file:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_file.name)[1]) as tmp_file:
-            tmp_file.write(uploaded_file.getvalue())
-            temp_file_path = tmp_file.name
-        st.audio(uploaded_file, format='audio/*')
-    
-    if temp_file_path:
-        detect_button = st.button("Analyze Audio")
-        if detect_button:
-            st.markdown(
-                """
-                <style>
-                .stButton>button { color: #808080; }
-                </style>
-                """, unsafe_allow_html=True)
-
-            processing_placeholder = st.empty()
-            processing_placeholder.write("Analyzing audio file...")
-
-            time.sleep(2)  # Simulating processing time
-
-            prediction, y, sr = predict_from_audio(temp_file_path)
-            processing_placeholder.empty()
-
-            if prediction is not None:
-                st.write(f"**Probability of Cough Detected:** {prediction:.2f}%")
-                advice = get_advice(prediction)
-                st.write(f"**Medical Advice:** {advice}")
-
-                # Show Visualizations
-                st.subheader("Audio Analysis & Visualization")
-                st.plotly_chart(visualize_waveform(y, sr))
-                st.plotly_chart(visualize_spectrogram(y, sr))
-
-            os.unlink(temp_file_path)
-
-    st.write("---")
-    st.subheader("About breatheAI")
-    st.write("""
-    breatheAI is a powerful AI-driven tool for detecting coughs in audio recordings. The model is trained on a dataset containing over 3,000 samples and utilizes advanced machine learning techniques to classify respiratory patterns accurately.
-    
-    **Technical Details:**
-    - **Dataset**: 31 audio features extracted from 3029 samples (sourced from Kaggle)
-    - **Model**: Gradient Boosting Classifier with optimized hyperparameters
-    - **Feature Engineering**: MFCCs, Chroma, Spectral Contrast, and more
-    - **Application**: Early detection of cough patterns for healthcare monitoring
     """)
 
 if __name__ == "__main__":

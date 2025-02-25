@@ -36,7 +36,7 @@ def predict_gbm(audio_file_path):
         try:
             with open('gbm_model.pkl', 'rb') as f:
                 model = pickle.load(f)
-            with open('gscaler.pkl', 'rb') as f:
+            with open('scaler.pkl', 'rb') as f:
                 scaler = pickle.load(f)
             
             features_scaled = scaler.transform([features])
@@ -54,14 +54,17 @@ def predict_gbm(audio_file_path):
 def predict_multi_output(audio_features, user_data):
     try:
         model = joblib.load('multi_output_model.pkl')
-        scaler = joblib.load('mscaler.pkl')
+        scaler = joblib.load('scaler.pkl')
         
-        user_data.extend(audio_features)
+        user_data = np.concatenate([user_data, audio_features])
         user_data_scaled = scaler.transform([user_data])
         prediction = model.predict(user_data_scaled)[0]
         return prediction
     except FileNotFoundError:
         st.error("Multi-output Model or scaler file not found.")
+        return None
+    except ValueError as e:
+        st.error(f"Feature size mismatch: {e}")
         return None
 
 def main():
@@ -86,7 +89,7 @@ def main():
     gender_mapping = {"Male": 0, "Female": 1, "Other": 2}
     fever_mapping = {"No": 0, "Yes": 1}
     respiratory_mapping = {"No": 0, "Yes": 1}
-    user_data = [age, gender_mapping[gender], fever_mapping[fever_muscle_pain], respiratory_mapping[respiratory_condition]]
+    user_data = np.array([age, gender_mapping[gender], fever_mapping[fever_muscle_pain], respiratory_mapping[respiratory_condition]])
     
     temp_file_path = None
 
@@ -105,7 +108,8 @@ def main():
             time.sleep(2)
             
             cough_probability, y, sr, mfccs, chroma, spectral_contrast = predict_gbm(temp_file_path)
-            multi_output_prediction = predict_multi_output(np.mean(mfccs, axis=1).tolist(), user_data)
+            audio_features = np.mean(mfccs, axis=1).tolist() if mfccs is not None else [0] * 13
+            multi_output_prediction = predict_multi_output(audio_features, user_data)
             processing_placeholder.empty()
             
             if cough_probability is not None:

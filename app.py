@@ -84,7 +84,10 @@ def main():
     
     with col2:
         st.write("OR Record Audio")
-        recorded_audio = st_audiorec(key="recorder")
+        recorded_audio = st_audiorec()
+ 
+        if recorded_audio is not None:
+            st.audio(recorded_audio, format='audio/wav')
 
     temp_file_path = None
 

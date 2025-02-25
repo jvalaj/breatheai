@@ -4,6 +4,6 @@ librosa
 pydub
 scipy
 plotly
-sklearn
+scikit-learn
 soundfile
 pickle-mixin

@@ -132,8 +132,7 @@ def main():
     st.markdown("""
  
     ### Learn More About the Creator:
-    - [GitHub](https://github.com/jvalaj)
-    - [LinkedIn](https://www.linkedin.com/in/jvalaj/)
+     [GitHub](https://github.com/jvalaj) | [LinkedIn](https://www.linkedin.com/in/jvalaj/)
     """)
 if __name__ == "__main__":
     main()

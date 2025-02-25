@@ -129,6 +129,11 @@ def main():
                     st.warning("⚠️ Severe cough detected. Please consider consulting a healthcare professional.")
             
             os.unlink(temp_file_path)
-    
+    st.markdown("""
+ 
+    ### Learn More About the Creator:
+    - [GitHub](https://github.com/jvalaj)
+    - [LinkedIn](https://www.linkedin.com/in/jvalaj/)
+    """)
 if __name__ == "__main__":
     main()

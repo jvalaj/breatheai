@@ -9,6 +9,7 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 from pydub import AudioSegment
+import joblib
 
 def extract_features(file_path):
     try:
@@ -28,61 +29,40 @@ def extract_features(file_path):
         st.error(f"Error processing {file_path}: {e}")
         return None, None, None, None, None, None
 
-def display_feature_analysis(mfccs, chroma, spectral_contrast):
-    """Formats and displays feature analysis in a readable way."""
-    st.subheader("Feature Analysis")
-    
-    # Normal reference ranges (placeholders, adjust if needed)
-    normal_mfcc = [-300, 60, 20, 10, 5, 5, 2, -5, -5, 0, -1, -3, 2]
-    normal_chroma = [0.6, 0.5, 0.4, 0.4, 0.5, 0.4, 0.4, 0.5, 0.4, 0.4, 0.6, 0.7]
-    normal_spectral = [15, 11, 15, 14, 16, 16, 46]
-    
-    # Convert numpy arrays to lists for plotting
-    user_mfcc = np.mean(mfccs, axis=1).tolist()
-    user_chroma = np.mean(chroma, axis=1).tolist()
-    user_spectral = np.mean(spectral_contrast, axis=1).tolist()
-    
-    # Function to create a comparison plot
-    def plot_feature_comparison(user_values, normal_values, feature_labels, title):
-        fig, ax = plt.subplots(figsize=(8, 5))
-        x = range(len(feature_labels))
-        ax.bar(x, normal_values, width=0.4, label="Normal Range", alpha=0.7)
-        ax.bar([i + 0.4 for i in x], user_values, width=0.4, label="User's Audio", alpha=0.7)
-        ax.set_xticks([i + 0.2 for i in x])
-        ax.set_xticklabels(feature_labels, rotation=45, ha="right")
-        ax.set_xlabel("Feature Type")
-        ax.set_ylabel("Value")
-        ax.set_title(title)
-        ax.legend()
-        st.pyplot(fig)
-    
-    # Display plots
-    plot_feature_comparison(user_mfcc, normal_mfcc, list(range(1, 14)), "MFCC Comparison")
-    plot_feature_comparison(user_chroma, normal_chroma, list(range(1, 13)), "Chroma Comparison")
-    plot_feature_comparison(user_spectral, normal_spectral, list(range(1, 8)), "Spectral Contrast Comparison")
-
-def predict_from_audio(audio_file_path):
+def predict_gbm(audio_file_path):
     features, y, sr, mfccs, chroma, spectral_contrast = extract_features(audio_file_path)
-
+    
     if features is not None:
         try:
             with open('gbm_model.pkl', 'rb') as f:
                 model = pickle.load(f)
-
-            with open('scaler.pkl', 'rb') as f:
+            with open('gscaler.pkl', 'rb') as f:
                 scaler = pickle.load(f)
-
+            
             features_scaled = scaler.transform([features])
-            prediction = model.predict(features_scaled)
-            return prediction[0] * 100, y, sr, mfccs, chroma, spectral_contrast
+            prediction = model.predict(features_scaled)[0] * 100
+            return prediction, y, sr, mfccs, chroma, spectral_contrast
         except FileNotFoundError:
-            st.error("Model or scaler file not found.")
+            st.error("GBM Model or scaler file not found.")
             return None, None, None, None, None, None
         except Exception as e:
             st.error(f"An error occurred: {e}")
             return None, None, None, None, None, None
     else:
         return None, None, None, None, None, None
+
+def predict_multi_output(audio_features, user_data):
+    try:
+        model = joblib.load('multi_output_model.pkl')
+        scaler = joblib.load('mscaler.pkl')
+        
+        user_data.extend(audio_features)
+        user_data_scaled = scaler.transform([user_data])
+        prediction = model.predict(user_data_scaled)[0]
+        return prediction
+    except FileNotFoundError:
+        st.error("Multi-output Model or scaler file not found.")
+        return None
 
 def main():
     st.set_page_config(page_title="breatheAI", layout="centered")
@@ -92,11 +72,21 @@ def main():
     ### ⚠️ Disclaimer:
     **Audio processing and visualization may take up to 60 seconds due to cloud hosting limitations on the free-tier plan. Please be patient.**
     
-    ### Upload Audio
-    Upload an audio file to analyze cough probability.
+    ### Upload Audio & Enter Details
+    Upload an audio file and provide additional health-related information for analysis.
     """)
     
     uploaded_file = st.file_uploader("Choose an audio file", type=None)
+    
+    age = st.number_input("Enter your age:", min_value=0, max_value=120, step=1)
+    gender = st.radio("Select gender:", options=["Male", "Female", "Other"])
+    fever_muscle_pain = st.radio("Do you have fever/muscle pain?", options=["No", "Yes"])
+    respiratory_condition = st.radio("Do you have a respiratory condition?", options=["No", "Yes"])
+    
+    gender_mapping = {"Male": 0, "Female": 1, "Other": 2}
+    fever_mapping = {"No": 0, "Yes": 1}
+    respiratory_mapping = {"No": 0, "Yes": 1}
+    user_data = [age, gender_mapping[gender], fever_mapping[fever_muscle_pain], respiratory_mapping[respiratory_condition]]
     
     temp_file_path = None
 
@@ -111,16 +101,29 @@ def main():
         if detect_button:
             processing_placeholder = st.empty()
             processing_placeholder.write("Analyzing audio file...")
-
+            
             time.sleep(2)
-
-            prediction, y, sr, mfccs, chroma, spectral_contrast = predict_from_audio(temp_file_path)
+            
+            cough_probability, y, sr, mfccs, chroma, spectral_contrast = predict_gbm(temp_file_path)
+            multi_output_prediction = predict_multi_output(np.mean(mfccs, axis=1).tolist(), user_data)
             processing_placeholder.empty()
-
-            if prediction is not None:
-                st.write(f"**Probability of Cough Detected:** {prediction:.2f}%")
-                display_feature_analysis(mfccs, chroma, spectral_contrast)
-
+            
+            if cough_probability is not None:
+                st.write(f"**Probability of Cough Detected:** {cough_probability:.2f}%")
+            
+            if multi_output_prediction is not None:
+                status_labels = {0: "Healthy", 1: "Symptomatic", 2: "Sick"}
+                cough_type_labels = {0: "Dry Cough", 1: "Wet Cough", 2: "Barking Cough"}
+                severity_labels = {0: "Mild", 1: "Moderate", 2: "Severe"}
+                
+                st.subheader("Prediction Results")
+                st.write(f"- **Health Status:** {status_labels.get(multi_output_prediction[0], 'Unknown')}")
+                st.write(f"- **Cough Type:** {cough_type_labels.get(multi_output_prediction[1], 'Unknown')}")
+                st.write(f"- **Severity Level:** {severity_labels.get(multi_output_prediction[2], 'Unknown')}")
+                
+                if multi_output_prediction[2] == 2:
+                    st.warning("⚠️ Severe cough detected. Please consider consulting a healthcare professional.")
+            
             os.unlink(temp_file_path)
     
 if __name__ == "__main__":

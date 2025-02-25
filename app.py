@@ -130,7 +130,12 @@ def main():
             
             os.unlink(temp_file_path)
     st.markdown("""
- 
+       ### How It Works:
+    - **Upload any audio file** in formats like WAV, MP3, FLAC, OGG, and more.
+    - **Feature Extraction**: The system processes the audio to extract key features like MFCCs, chroma, and spectral contrast.
+    - **Machine Learning Prediction**: A trained Gradient Boosting Model (GBM) analyzes the features and predicts the probability of a cough in the recording.
+    - **Visual Representations**: The waveform and spectrogram visualizations help users understand the sound characteristics.
+    
     ### Learn More About the Creator:
      [GitHub](https://github.com/jvalaj) | [LinkedIn](https://www.linkedin.com/in/jvalaj/)
     """)

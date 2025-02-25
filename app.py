@@ -135,6 +135,12 @@ def main():
     - **Feature Extraction**: The system processes the audio to extract key features like MFCCs, chroma, and spectral contrast.
     - **Machine Learning Prediction**: A trained Gradient Boosting Model (GBM) analyzes the features and predicts the probability of a cough in the recording.
     - **Visual Representations**: The waveform and spectrogram visualizations help users understand the sound characteristics.
+        ### Inspiration for breatheAI
+    Growing up in New Delhi, I witnessed firsthand how intense air pollution could be, especially during the winter months. 
+    The thick smog, the difficulty in breathing, and the rising cases of respiratory illnesses always had me thinking—how can technology help?
+    As a college student, I realized the potential of AI and machine learning in identifying respiratory conditions early. 
+    That’s when I decided to build breatheAI, a tool that could detect coughs from audio recordings and provide real-time insights. 
+    Hopefully, this project can contribute to a future where technology aids in monitoring air-quality-related illnesses and helps people make informed health decisions.
     
     ### Learn More About the Creator:
      [GitHub](https://github.com/jvalaj) | [LinkedIn](https://www.linkedin.com/in/jvalaj/)

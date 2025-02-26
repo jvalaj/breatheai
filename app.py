@@ -103,14 +103,17 @@ def predict_multi_output(audio_file_path, user_data):
         st.error("Multi-output Model or scaler file not found.")
         return None
     except ValueError as e:
-        st.error(f"Feature size mismatch: {e}")
+        st.erroSr(f"Feature size mismatch: {e}")
         return None
 
 # -------------------- Main Streamlit App --------------------
 def main():
-    st.set_page_config(page_title="breatheAI", layout="centered")
+    st.set_page_config(page_title="breatheAI", page_icon="logobreatheai.PNG",layout="centered")
     st.title("breatheAI")
-
+    col1, col2, col3 = st.columns([1, 3, 1])
+    with col2:
+        st.image('logobreatheai.PNG', width=200)  # Adjust width as needed
+    
     st.markdown("""
     ### Disclaimer:
     **Audio processing and visualization may take up to 60 seconds due to cloud hosting limitations on the free-tier plan. Please be patient.**

@@ -11,24 +11,37 @@ import matplotlib.pyplot as plt
 from pydub import AudioSegment
 import joblib
 
-def extract_features(file_path):
+def extract_audio_features(file_path):
+    """Extracts audio features from an audio file using librosa."""
     try:
-        audio = AudioSegment.from_file(file_path)
-        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp_file:
-            file_path = tmp_file.name
-            audio.export(file_path, format='wav')
+        y, sr = librosa.load(file_path, sr=None)
+        
+        if len(y) == 0:
+            raise ValueError("Empty audio file or failed to load.")
 
-        y, sr = librosa.load(file_path)
+        # Normalize audio
+        y = y / np.max(np.abs(y)) if np.max(np.abs(y)) > 0 else y
+
+        # Feature extraction
         mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
         chroma = librosa.feature.chroma_stft(y=y, sr=sr)
         spectral_contrast = librosa.feature.spectral_contrast(y=y, sr=sr)
 
-        features = np.hstack((np.mean(mfccs, axis=1), np.mean(chroma, axis=1), np.mean(spectral_contrast, axis=1)))
-        return features, y, sr, mfccs, chroma, spectral_contrast
-    except Exception as e:
-        st.error(f"Error processing {file_path}: {e}")
-        return None, None, None, None, None, None
+        # Ensure correct feature size
+        mfccs_mean = np.mean(mfccs, axis=1) if mfccs.shape[1] > 0 else np.zeros(13)
+        chroma_mean = np.mean(chroma, axis=1) if chroma.shape[1] > 0 else np.zeros(12)
+        spectral_contrast_mean = np.mean(spectral_contrast, axis=1) if spectral_contrast.shape[1] > 0 else np.zeros(7)
 
+        # Combine features
+        features = np.hstack((mfccs_mean, chroma_mean, spectral_contrast_mean))
+        
+        # Convert NaNs to zeros (just in case)
+        features = np.nan_to_num(features)
+
+        return features
+    except Exception as e:
+        print(f"Error processing audio file: {e}")
+        return np.zeros(36)  # Ensure output matches expected feature size
 def predict_gbm(audio_file_path):
     features, y, sr, mfccs, chroma, spectral_contrast = extract_features(audio_file_path)
     

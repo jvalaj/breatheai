@@ -113,7 +113,7 @@ def main():
     with col2:
         st.title("breatheAI")
     with col1:
-        st.image('logobreatheai.PNG', width=150)  # Adjust width as needed
+        st.image('logobreatheai.PNG', width=550)  # Adjust width as needed
     
     st.markdown("""
     ### Disclaimer:

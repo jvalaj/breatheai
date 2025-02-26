@@ -188,10 +188,12 @@ def main():
     - **Machine Learning Prediction**: A trained Gradient Boosting Model (GBM) analyzes the features and predicts the probability of a cough in the recording.
     - **Visual Representations**: The waveform and spectrogram visualizations help users understand the sound characteristics.
 
-    ### Inspiration for breatheAI
-     Growing up in New Delhi, I experienced firsthand the impact of severe air pollution, especially during the winter months. The persistent smog and rising cases of respiratory illnesses made it clear how crucial it is to monitor respiratory health effectively. Over time, I realized that coughing is an everyday occurrence—often dismissed without knowing whether it signals a minor irritation or a more serious condition. 
-     Back in 2024, at Hack-a-Bull, I developed breatheAI as a hackathon project, initially as an experimental solution to analyze cough patterns. What started as a challenge-driven innovation quickly evolved into something with real-world potential. I realized that coughing is incredibly common, yet there’s no accessible way to objectively measure its intensity or track its progression over time.
-     Looking ahead, breatheAI has the potential to integrate with wearable health devices, monitor respiratory health trends, and incorporate environmental data to assess the broader impact of air quality on respiratory conditions. What began as a hackathon project is now evolving into a tool that could make proactive respiratory health monitoring more accessible and data-driven.
+    ### About
+    - Growing up in New Delhi, I experienced firsthand the impact of severe air pollution, especially during the winter months. The persistent smog and rising cases of respiratory illnesses made it clear how crucial it is to monitor respiratory health effectively. Over time, I realized that coughing is an everyday occurrence—often dismissed without knowing whether it signals a minor irritation or a more serious condition. 
+     
+    - Back in 2024, at Hack-a-Bull, I developed breatheAI as a hackathon project, initially as an experimental solution to analyze cough patterns. What started as a challenge-driven innovation quickly evolved into something with real-world potential. I realized that coughing is incredibly common, yet there’s no accessible way to objectively measure its intensity or track its progression over time.
+     
+    - Looking ahead, breatheAI has the potential to integrate with wearable health devices, monitor respiratory health trends, and incorporate environmental data to assess the broader impact of air quality on respiratory conditions. What began as a hackathon project is now evolving into a tool that could make proactive respiratory health monitoring more accessible and data-driven.
     ### Learn More About the Creator:
      [GitHub](https://github.com/jvalaj) | [LinkedIn](https://www.linkedin.com/in/jvalaj/)
     """)

@@ -110,9 +110,9 @@ def predict_multi_output(audio_file_path, user_data):
 def main():
     st.set_page_config(page_title="breatheAI", page_icon="logobreatheai.PNG",layout="centered")
     col1, col2, = st.columns([1, 1])
-    with col1:
-        st.title("breatheAI")
     with col2:
+        st.title("breatheAI")
+    with col1:
         st.image('logobreatheai.PNG', width=150)  # Adjust width as needed
     
     st.markdown("""

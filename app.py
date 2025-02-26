@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from pydub import AudioSegment
 import joblib
 
-def extract_audio_features(file_path):
+def extract_features(file_path):
     """Extracts audio features from an audio file using librosa."""
     try:
         y, sr = librosa.load(file_path, sr=None)

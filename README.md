@@ -1,5 +1,5 @@
 # breatheAI
-
+check it out here: https://breatheai.streamlit.app/
 ## Overview
 
 This project aims to detect cough sounds from an audio file using machine learning. The model is trained on a dataset containing metadata and 31 audio features extracted from 3029 rows of data sourced from Kaggle. The model employs a Gradient Boosting classifier to predict the likelihood of a cough being detected in the given audio input.

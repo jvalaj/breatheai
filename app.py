@@ -109,7 +109,7 @@ def predict_multi_output(audio_file_path, user_data):
 # -------------------- Main Streamlit App --------------------
 def main():
     st.set_page_config(page_title="breatheAI", page_icon="logobreatheai.PNG",layout="centered")
-    col1, col2, = st.columns([1, 1])
+    col1, col2, = st.columns([1, 9])
     with col2:
         st.title("breatheAI")
     with col1:

@@ -12,6 +12,24 @@ from pydub import AudioSegment
 import joblib
 import warnings
 
+def extract_features(file_path):
+    try:
+        audio = AudioSegment.from_file(file_path)
+        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp_file:
+            file_path = tmp_file.name
+            audio.export(file_path, format='wav')
+
+        y, sr = librosa.load(file_path)
+        mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
+        chroma = librosa.feature.chroma_stft(y=y, sr=sr)
+        spectral_contrast = librosa.feature.spectral_contrast(y=y, sr=sr)
+
+        features = np.hstack((np.mean(mfccs, axis=1), np.mean(chroma, axis=1), np.mean(spectral_contrast, axis=1)))
+        return features, y, sr, mfccs, chroma, spectral_contrast
+    except Exception as e:
+        st.error(f"Error processing {file_path}: {e}")
+        return None, None, None, None, None, None
+
 # -------------------- Feature Extraction Function --------------------
 def extract_audio_features(file_path):
     """Extracts audio features from an uploaded file."""

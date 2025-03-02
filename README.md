@@ -12,6 +12,8 @@ This project aims to detect cough sounds from an audio file using machine learni
 - **Prediction**: After feature extraction, the model predicts the likelihood of a cough being present in the given audio file.
 - **Scalability**: The system works on individual audio files and can be used for batch processing by calling the function multiple times.
 
+('./1.1.png')
+
 ## Requirements
 
 Before running the project, make sure you have the following dependencies installed:

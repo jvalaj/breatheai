@@ -68,8 +68,8 @@ def predict_multi_output(audio_features, user_data):
         return None
 
 def main():
-    st.set_page_config(page_title="breatheAI", layout="centered")
-    st.title("breatheAI: AI-Powered Cough Detection")
+    st.set_page_config(page_title="BreatheAI", layout="centered")
+    st.title("BreatheAI: ML Cough Detection")
 
     st.markdown("""
     ### Disclaimer:
